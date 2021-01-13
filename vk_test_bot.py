@@ -7,10 +7,10 @@ from vk_api.utils import get_random_id
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
 from auth_data import token
-from func_and_var import list_answer
+from func_and_var import *
 
 # Создание переменной с функцией вызова клавиатуры (одно нажатие)
-keyboard = VkKeyboard()
+keyboard = VkKeyboard(one_time=False)
 # Создание кнопок
 keyboard.add_button('a', color=VkKeyboardColor.PRIMARY)
 # перенос кнопки на следующую строку
@@ -23,36 +23,32 @@ keyboard.add_openlink_button('Ссылка', link='https://github.com/gydman')
 
 # отправить ответ на новое сообщение
 def write_message(sender, message):
-    vk_session.method('messages.send',
-                      {
-                          'user_id': sender,
-                          'message': message,
-                          'random_id': get_random_id()
-                          })
+    vk_session.method('messages.send', {
+        'user_id': sender,
+        'message': message+' '+str(list_smile[random.randint(0, len(list_smile))]),
+        'random_id': get_random_id()
+        }
+    )
 
 
 # отправить картинку
 def send_photo(sender):
-    vk_session.method('messages.send',
-                      {
-                          'user_id': sender,
-                          'message': 'Понравилась картинка?',
-                          'attachment': ','.join(attachments),
-                          'random_id': get_random_id(),
-                          # вызов json клавиатуры
-                          'keyboard': keyboard.get_keyboard()
-                          })
+    vk_session.method('messages.send', {
+        'user_id': sender,
+        'attachment': ','.join(attachments),
+        'random_id': get_random_id()
+        }
+    )
 
 
-def view_keybord(sender):
-    vk_session.method('messages.send',
-                      {
-                          'user_id': sender,
-                          'message': '',
-                          'random_id': get_random_id(),
-                          # вызов json клавиатуры
-                          'keyboard': keyboard.get_keyboard()
-                          })
+def view_keybord(sender, message, keyboard):
+    vk_session.method('messages.send', {
+        'user_id': sender,
+        'message': message,
+        'random_id': 0,
+        'keyboard': keyboard.get_keyboard()
+        }
+    )
 
 
 vk_session = vk_api.VkApi(token=token)
@@ -77,15 +73,14 @@ while True:
 
             # анализ полученного текста и реакция
             if received_message == 'a':
-                write_message(sender, list_answer['A'][random.randint(0, 4)])
-                # send_photo(sender)
+                write_message(sender, list_answer['A'][random.randint(0, len(list_answer['A'][:]) - 1)])
             elif received_message == 's':
                 write_message(sender, list_answer['B'][random.randint(0, 4)])
             elif received_message == 'p':
                 send_photo(sender)
-            elif received_message == 'l':
-                view_keybord(sender)
+            elif received_message == 'k':
+                view_keybord(sender, message='Клавиатура', keyboard=keyboard)
             else:
                 write_message(sender, list_answer['C'][random.randint(0, 4)])
 
-        time.sleep(0.5)
+        time.sleep(1)
